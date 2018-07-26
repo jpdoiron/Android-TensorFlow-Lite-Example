@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'Key0'
+            keyPassword 'frima1'
+            storeFile file('C:/Users/JP/androidKeyJP.jks')
+            storePassword 'frima1'
+        }
+    }
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.amitshekhar.tflite"
@@ -14,17 +22,18 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
-
     aaptOptions {
         noCompress "tflite"
         noCompress "lite"
     }
+    buildToolsVersion '28.0.1'
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.0'
     compile 'com.wonderkiln:camerakit:0.13.1'
     compile 'org.tensorflow:tensorflow-lite:+'

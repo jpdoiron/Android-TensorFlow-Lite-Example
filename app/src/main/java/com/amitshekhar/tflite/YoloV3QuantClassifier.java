@@ -36,7 +36,8 @@ public class YoloV3QuantClassifier implements Classifier {
     private int inputSize;
     private List<String> labelList;
 
-    private static final String MODEL_PATH = "quant_yolov3.lite";
+
+    private static final String MODEL_PATH = "Quant_YOLOv3-tiny-mobilenet.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 
@@ -69,7 +70,7 @@ public class YoloV3QuantClassifier implements Classifier {
 
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-        Log.d("inference","time : " + timeElapsed);
+        Log.w("inference","time : " + timeElapsed);
 
         byte[][] result2 = new byte[1][1573] ;
 

@@ -36,7 +36,8 @@ public class YoloV3Classifier implements Classifier {
     private int inputSize;
     private List<String> labelList;
 
-    private static final String MODEL_PATH = "opt_yolov3.lite";
+    private static final String MODEL_PATH = "YOLOv3-tiny-mobilenet.tflite";
+
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 

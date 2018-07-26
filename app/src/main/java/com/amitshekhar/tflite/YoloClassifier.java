@@ -38,7 +38,7 @@ public class YoloClassifier implements Classifier {
     private int inputSize;
     private List<String> labelList;
 
-    private static final String MODEL_PATH = "ModelWE.tflite";
+    private static final String MODEL_PATH = "YOLO-mobilenet.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 

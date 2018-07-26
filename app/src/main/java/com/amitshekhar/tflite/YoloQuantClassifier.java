@@ -36,7 +36,7 @@ public class YoloQuantClassifier implements Classifier {
     private int inputSize;
     private List<String> labelList;
 
-    private static final String MODEL_PATH = "mymodelQuantWE.tflite";
+    private static final String MODEL_PATH = "Quant_YOLO-mobilenet.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 
