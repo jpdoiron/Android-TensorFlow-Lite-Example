@@ -123,7 +123,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    classifier = TensorFlowImageClassifier.create(
+                    //classifier = TensorFlowImageClassifier.create(
+                    //classifier = YoloQuantClassifier.create(
+                    //classifier = YoloClassifier.create(
+                    //classifier = YoloV3Classifier.create(
+                    classifier = YoloV3QuantClassifier.create(
                             getAssets(),
                             MODEL_PATH,
                             LABEL_PATH,

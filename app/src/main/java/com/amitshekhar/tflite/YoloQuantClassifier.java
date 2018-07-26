@@ -25,7 +25,7 @@ import java.util.PriorityQueue;
  * Created by amitshekhar on 17/03/18.
  */
 
-public class TensorFlowImageClassifier implements Classifier {
+public class YoloQuantClassifier implements Classifier {
 
     private static final int MAX_RESULTS = 3;
     private static final int BATCH_SIZE = 1;
@@ -36,8 +36,11 @@ public class TensorFlowImageClassifier implements Classifier {
     private int inputSize;
     private List<String> labelList;
 
+    private static final String MODEL_PATH = "mymodelQuantWE.tflite";
+    private static final String LABEL_PATH = "labels.txt";
+    private static final int INPUT_SIZE = 224;
 
-    private TensorFlowImageClassifier() {
+    private YoloQuantClassifier() {
 
     }
 
@@ -46,10 +49,10 @@ public class TensorFlowImageClassifier implements Classifier {
                              String labelPath,
                              int inputSize) throws IOException {
 
-        TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
-        classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, modelPath));
-        classifier.labelList = classifier.loadLabelList(assetManager, labelPath);
-        classifier.inputSize = inputSize;
+        YoloQuantClassifier classifier = new YoloQuantClassifier();
+        classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
+        classifier.labelList = classifier.loadLabelList(assetManager, LABEL_PATH);
+        classifier.inputSize = INPUT_SIZE;
 
         return classifier;
     }
@@ -57,13 +60,14 @@ public class TensorFlowImageClassifier implements Classifier {
     @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-        byte[][] result = new byte[1][labelList.size()];
+        byte[][] result = new byte[1][1573];
 
         long start = System.currentTimeMillis();
+
         interpreter.run(byteBuffer, result);
+
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-
         Log.d("inference","time : " + timeElapsed);
 
         return getSortedResult(result);

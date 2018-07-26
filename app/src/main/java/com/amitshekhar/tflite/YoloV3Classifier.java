@@ -25,19 +25,24 @@ import java.util.PriorityQueue;
  * Created by amitshekhar on 17/03/18.
  */
 
-public class TensorFlowImageClassifier implements Classifier {
+public class YoloV3Classifier implements Classifier {
 
     private static final int MAX_RESULTS = 3;
     private static final int BATCH_SIZE = 1;
-    private static final int PIXEL_SIZE = 3;
+    private static final int PIXEL_SIZE = 3*4;
     private static final float THRESHOLD = 0.1f;
 
     private Interpreter interpreter;
     private int inputSize;
     private List<String> labelList;
 
+    private static final String MODEL_PATH = "opt_yolov3.lite";
+    private static final String LABEL_PATH = "labels.txt";
+    private static final int INPUT_SIZE = 224;
 
-    private TensorFlowImageClassifier() {
+    protected float imgDataFloat[][][][] = new float[BATCH_SIZE][INPUT_SIZE][INPUT_SIZE][3];
+
+    private YoloV3Classifier() {
 
     }
 
@@ -46,27 +51,35 @@ public class TensorFlowImageClassifier implements Classifier {
                              String labelPath,
                              int inputSize) throws IOException {
 
-        TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
-        classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, modelPath));
-        classifier.labelList = classifier.loadLabelList(assetManager, labelPath);
-        classifier.inputSize = inputSize;
+        YoloV3Classifier classifier = new YoloV3Classifier();
+        classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
+        classifier.labelList = classifier.loadLabelList(assetManager, LABEL_PATH);
+        classifier.inputSize = INPUT_SIZE;
 
         return classifier;
     }
 
+
     @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-        byte[][] result = new byte[1][labelList.size()];
+
+        float[] myFloatArray = new float[BATCH_SIZE * inputSize * inputSize*3];
+        ByteBuffer.wrap(byteBuffer.array()).asFloatBuffer().get(myFloatArray);
+
+        float[][][][] result = new float[1][7][7][18] ;
 
         long start = System.currentTimeMillis();
-        interpreter.run(byteBuffer, result);
+
+        interpreter.run(imgDataFloat, result);
+
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-
         Log.d("inference","time : " + timeElapsed);
 
-        return getSortedResult(result);
+        byte[][] result2 = new byte[1][1573];
+
+        return getSortedResult(result2);
     }
 
     @Override
@@ -100,17 +113,31 @@ public class TensorFlowImageClassifier implements Classifier {
         byteBuffer.order(ByteOrder.nativeOrder());
         int[] intValues = new int[inputSize * inputSize];
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
         int pixel = 0;
         for (int i = 0; i < inputSize; ++i) {
             for (int j = 0; j < inputSize; ++j) {
                 final int val = intValues[pixel++];
-                byteBuffer.put((byte) ((val >> 16) & 0xFF));
-                byteBuffer.put((byte) ((val >> 8) & 0xFF));
-                byteBuffer.put((byte) (val & 0xFF));
+                //byteBuffer.putFloat((val >> 16) & 0xFF);
+                //byteBuffer.putFloat ((val >> 8) & 0xFF);
+                //byteBuffer.putFloat(val & 0xFF);
+                //byteBuffer.put((byte) ((val >> 16) & 0xFF));
+                //byteBuffer.put((byte) ((val >> 8) & 0xFF));
+                //byteBuffer.put((byte) (val & 0xFF));
+
+
+                float r = (val >> 16 & 0xFF) / 127.5f - 1;
+                float b = (val >> 0xFF) / 127.5f - 1;
+                float g = (val >> 8 & 0xFF) / 127.5f - 1;
+
+                imgDataFloat[0][i][j][0] = r;
+                imgDataFloat[0][i][j][1] = g;
+                imgDataFloat[0][i][j][2] = b;
             }
         }
         return byteBuffer;
     }
+
 
     @SuppressLint("DefaultLocale")
     private List<Recognition> getSortedResult(byte[][] labelProbArray) {
