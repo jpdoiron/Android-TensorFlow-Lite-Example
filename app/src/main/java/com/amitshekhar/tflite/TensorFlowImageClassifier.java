@@ -55,6 +55,11 @@ public class TensorFlowImageClassifier implements Classifier {
     }
 
     @Override
+    public void recognizeFloat(ByteBuffer data) {
+
+    }
+
+    @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
         byte[][] result = new byte[1][labelList.size()];

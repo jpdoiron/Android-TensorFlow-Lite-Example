@@ -2,6 +2,7 @@ package com.amitshekhar.tflite;
 
 import android.graphics.Bitmap;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -9,6 +10,8 @@ import java.util.List;
  */
 
 public interface Classifier {
+
+    void recognizeFloat(ByteBuffer data);
 
     class Recognition {
         /**

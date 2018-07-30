@@ -2,4 +2,6 @@
     <string name="app_name">AndroidTensorFlowMachineLearningExample</string>
     <string name="toggle_camera">Toggle Camera</string>
     <string name="detect_object">Detect Object</string>
+    <string name="title_activity_live_camera">LiveCameraActivity</string>
+    <string name="title_activity_camera">CameraActivity</string>
 </resources>

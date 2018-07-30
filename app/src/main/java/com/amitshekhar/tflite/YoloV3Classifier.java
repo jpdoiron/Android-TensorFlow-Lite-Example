@@ -42,6 +42,7 @@ public class YoloV3Classifier implements Classifier {
     private static final int INPUT_SIZE = 224;
 
     protected float imgDataFloat[][][][] = new float[BATCH_SIZE][INPUT_SIZE][INPUT_SIZE][3];
+    float[][][][] result = new float[1][7][7][18] ;
 
     private YoloV3Classifier() {
 
@@ -62,13 +63,16 @@ public class YoloV3Classifier implements Classifier {
 
 
     @Override
+    public void recognizeFloat(ByteBuffer data) {
+
+    }
+
+    @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
-        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+        convertBitmapToByteBuffer(bitmap);
 
-        float[] myFloatArray = new float[BATCH_SIZE * inputSize * inputSize*3];
-        ByteBuffer.wrap(byteBuffer.array()).asFloatBuffer().get(myFloatArray);
-
-        float[][][][] result = new float[1][7][7][18] ;
+        //float[] myFloatArray = new float[BATCH_SIZE * inputSize * inputSize*3];
+        //ByteBuffer.wrap(byteBuffer.array()).asFloatBuffer().get(myFloatArray);
 
         long start = System.currentTimeMillis();
 
@@ -78,9 +82,8 @@ public class YoloV3Classifier implements Classifier {
         long timeElapsed = finish - start;
         Log.d("inference","time : " + timeElapsed);
 
-        byte[][] result2 = new byte[1][1573];
 
-        return getSortedResult(result2);
+        return getSortedResult(result);
     }
 
     @Override
@@ -141,7 +144,7 @@ public class YoloV3Classifier implements Classifier {
 
 
     @SuppressLint("DefaultLocale")
-    private List<Recognition> getSortedResult(byte[][] labelProbArray) {
+    private List<Recognition> getSortedResult(float[][][][] labelProbArray) {
 
         PriorityQueue<Recognition> pq =
                 new PriorityQueue<>(
@@ -152,7 +155,7 @@ public class YoloV3Classifier implements Classifier {
                                 return Float.compare(rhs.getConfidence(), lhs.getConfidence());
                             }
                         });
-
+/*
         for (int i = 0; i < labelList.size(); ++i) {
             float confidence = (labelProbArray[0][i] & 0xff) / 255.0f;
             if (confidence > THRESHOLD) {
@@ -160,7 +163,7 @@ public class YoloV3Classifier implements Classifier {
                         labelList.size() > i ? labelList.get(i) : "unknown",
                         confidence));
             }
-        }
+        }*/
 
         final ArrayList<Recognition> recognitions = new ArrayList<>();
         int recognitionsSize = Math.min(pq.size(), MAX_RESULTS);

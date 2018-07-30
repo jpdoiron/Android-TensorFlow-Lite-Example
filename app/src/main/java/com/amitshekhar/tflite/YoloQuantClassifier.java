@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
@@ -32,11 +34,12 @@ public class YoloQuantClassifier implements Classifier {
     private static final int PIXEL_SIZE = 3;
     private static final float THRESHOLD = 0.1f;
 
+    private AssetManager assetManager;
     private Interpreter interpreter;
     private int inputSize;
     private List<String> labelList;
 
-    private static final String MODEL_PATH = "Quant_YOLO-mobilenet.tflite";
+    private static final String MODEL_PATH = "Quant_yolov1-tiny.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 
@@ -53,13 +56,31 @@ public class YoloQuantClassifier implements Classifier {
         classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
         classifier.labelList = classifier.loadLabelList(assetManager, LABEL_PATH);
         classifier.inputSize = INPUT_SIZE;
+        classifier.assetManager = assetManager;
 
         return classifier;
     }
 
     @Override
+    public void recognizeFloat(ByteBuffer data) {
+
+    }
+
+    @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
-        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+
+
+        //AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
+
+        //Bitmap bm = BitmapFactory.decodeResource(activity.getResources(), R.drawable.image);
+        Bitmap bm =null;
+        try {
+            bm = BitmapFactory.decodeStream(assetManager.open("screen_1.png"));
+        } catch(IOException e) {
+            // handle exception
+        }
+
+        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bm);
         byte[][] result = new byte[1][1573];
 
         long start = System.currentTimeMillis();

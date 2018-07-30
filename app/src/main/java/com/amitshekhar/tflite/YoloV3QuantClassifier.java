@@ -33,6 +33,8 @@ public class YoloV3QuantClassifier implements Classifier {
     private static final float THRESHOLD = 0.1f;
 
     private Interpreter interpreter;
+    private Interpreter interpreter2;
+    private Interpreter interpreter3;
     private int inputSize;
     private List<String> labelList;
 
@@ -52,25 +54,97 @@ public class YoloV3QuantClassifier implements Classifier {
 
         YoloV3QuantClassifier classifier = new YoloV3QuantClassifier();
         classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
+        classifier.interpreter2 = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
+        classifier.interpreter3 = new Interpreter(classifier.loadModelFile(assetManager, MODEL_PATH));
         classifier.labelList = classifier.loadLabelList(assetManager, LABEL_PATH);
         classifier.inputSize = INPUT_SIZE;
+
 
         return classifier;
     }
 
+    public static ByteBuffer DeepCopy(ByteBuffer original) {
+        ByteBuffer clone = ByteBuffer.allocate(original.capacity());
+        original.rewind();//copy from the beginning
+        clone.put(original);
+        original.rewind();
+        clone.flip();
+        return clone;
+    }
+
+    public class MyRunnable implements Runnable {
+
+        ByteBuffer mBuffer;
+        Interpreter mInterpreter;
+        String mIdx;
+        public MyRunnable(ByteBuffer buffer, Interpreter interpreter, String idx) {
+            // store parameter for later user
+            mBuffer = DeepCopy(buffer);
+            mInterpreter = interpreter;
+            mIdx = idx;
+        }
+
+        public void run() {
+            long start = System.currentTimeMillis();
+            byte[][][][] result = new byte[1][7][7][18] ;
+            mInterpreter.run(mBuffer, result);
+
+            long finish = System.currentTimeMillis();
+            long timeElapsed = finish - start;
+            Log.w("inference " + mIdx,"time : " + timeElapsed);
+        }
+    }
+
+    @Override
+    public void recognizeFloat(ByteBuffer data) {
+
+    }
+
     @Override
     public List<Recognition> recognizeImage(Bitmap bitmap) {
-        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-        byte[][][][] result = new byte[1][7][7][18] ;
 
+        final ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+
+        final byte[][][][] result = new byte[1][7][7][18] ;
 
         long start = System.currentTimeMillis();
 
+
+
+        Runnable r1 = new MyRunnable(byteBuffer, interpreter2, "1");
+        Thread t1 = new Thread(r1);
+        t1.start();
+
+        Runnable r2 = new MyRunnable(byteBuffer, interpreter3, "2");
+        Thread t2 = new Thread(r2);
+        t2.start();
+
+
+
         interpreter.run(byteBuffer, result);
+
+
+
+        //Runnable r2 = new MyRunnable(byteBuffer);
+
+
+
+       // Thread t2 = new Thread(r2);
+
+        //t2.start();
+
+
+
+        try { t1.join(); } catch (InterruptedException e) { e.printStackTrace(); }
+        try{ t2.join(); } catch (InterruptedException e) { e.printStackTrace(); }
+
+
 
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-        Log.w("inference","time : " + timeElapsed);
+
+        Log.w("inference total","time : " + timeElapsed);
+
 
         byte[][] result2 = new byte[1][1573] ;
 
