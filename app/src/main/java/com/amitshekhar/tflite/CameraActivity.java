@@ -16,7 +16,6 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.design.widget.FloatingActionButton;
@@ -27,21 +26,14 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 public class CameraActivity extends AppCompatActivity {
@@ -66,17 +58,7 @@ public class CameraActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         setContentView(R.layout.activity_main);
         textureView = findViewById(R.id.textureview);
@@ -97,16 +79,22 @@ public class CameraActivity extends AppCompatActivity {
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
+
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             if (characteristics != null) {
                 jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+                int[] outputFormats = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputFormats();
+                for (int x:outputFormats
+                     ) {
+                    Log.e("Camera Activity","Format : " + x);
+                }
             }
             int width = 640, height = 480;
-            if (jpegSizes != null && jpegSizes.length > 0) {
+           /* if (jpegSizes != null && jpegSizes.length > 0) {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
-            }
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            }*/
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.FLEX_RGB_888, 1);
             List<Surface> outputSurfaces = new ArrayList<>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
@@ -124,35 +112,23 @@ public class CameraActivity extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
-                        save(bytes);
+                        //save(bytes);
                     } catch (Exception ee) {
+                        Log.e("Camera Activity",ee.getMessage());
+
                     } finally {
                         if (image != null)
                             image.close();
                     }
                 }
 
-                void save(byte[] bytes) {
-                    File file12 = getOutputMediaFile();
-                    OutputStream outputStream = null;
-                    try {
-                        outputStream = new FileOutputStream(file12);
-                        outputStream.write(bytes);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            if (outputStream != null)
-                                outputStream.close();
-                        } catch (Exception e) {
-                        }
-                    }
-                }
+
             };
             HandlerThread handlerThread = new HandlerThread("takepicture");
             handlerThread.start();
             final Handler handler = new Handler(handlerThread.getLooper());
             reader.setOnImageAvailableListener(imageAvailableListener, handler);
+
             final CameraCaptureSession.CaptureCallback previewSSession = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
@@ -165,12 +141,15 @@ public class CameraActivity extends AppCompatActivity {
                     startCamera();
                 }
             };
+
             cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
                     try {
                         session.capture(capturebuilder.build(), previewSSession, handler);
                     } catch (Exception e) {
+                        Log.e("Camera Activity",e.getMessage());
+
                     }
                 }
 
@@ -178,7 +157,10 @@ public class CameraActivity extends AppCompatActivity {
                 public void onConfigureFailed(CameraCaptureSession session) {
                 }
             }, handler);
+
         } catch (Exception e) {
+            Log.e("Camera Activity",e.getMessage());
+
         }
     }
 
@@ -190,18 +172,13 @@ public class CameraActivity extends AppCompatActivity {
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             previewsize = map.getOutputSizes(SurfaceTexture.class)[0];
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                Log.w("Camera Activity","No permission");
                 return;
             }
             manager.openCamera(camerId, stateCallback, null);
         }catch (Exception e)
         {
+            Log.e("Camera Activity",e.getMessage());
         }
     }
     private TextureView.SurfaceTextureListener surfaceTextureListener=new TextureView.SurfaceTextureListener() {
@@ -292,41 +269,5 @@ public class CameraActivity extends AppCompatActivity {
             previewSession.setRepeatingRequest(previewBuilder.build(), null, handler);
         }catch (Exception e){}
     }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    private static File getOutputMediaFile() {
-        File mediaStorageDir = new File(
-                Environment
-                        .getExternalStorageDirectory(),
-                "MyCameraApp");
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
-                return null;
-            }
-        }
-        // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
-                .format(new Date());
-        File mediaFile;
-        mediaFile = new File(mediaStorageDir.getPath() + File.separator
-                + "IMG_" + timeStamp + ".jpg");
-        return mediaFile;
-    }
+
 }
