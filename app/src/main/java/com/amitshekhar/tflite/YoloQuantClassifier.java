@@ -5,7 +5,6 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
@@ -19,9 +18,7 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
 
 /**
  * Created by amitshekhar on 17/03/18.
@@ -67,7 +64,7 @@ public class YoloQuantClassifier implements Classifier {
     }
 
     @Override
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
+    public List<Box> recognizeImage(Bitmap bitmap) {
 
 
         //AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
@@ -138,32 +135,11 @@ public class YoloQuantClassifier implements Classifier {
     }
 
     @SuppressLint("DefaultLocale")
-    private List<Recognition> getSortedResult(byte[][] labelProbArray) {
+    private List<Box> getSortedResult(byte[][] labelProbArray) {
 
-        PriorityQueue<Recognition> pq =
-                new PriorityQueue<>(
-                        MAX_RESULTS,
-                        new Comparator<Recognition>() {
-                            @Override
-                            public int compare(Recognition lhs, Recognition rhs) {
-                                return Float.compare(rhs.getConfidence(), lhs.getConfidence());
-                            }
-                        });
 
-        for (int i = 0; i < labelList.size(); ++i) {
-            float confidence = (labelProbArray[0][i] & 0xff) / 255.0f;
-            if (confidence > THRESHOLD) {
-                pq.add(new Recognition("" + i,
-                        labelList.size() > i ? labelList.get(i) : "unknown",
-                        confidence));
-            }
-        }
+        final List<Box> recognitions = new ArrayList<>();
 
-        final ArrayList<Recognition> recognitions = new ArrayList<>();
-        int recognitionsSize = Math.min(pq.size(), MAX_RESULTS);
-        for (int i = 0; i < recognitionsSize; ++i) {
-            recognitions.add(pq.poll());
-        }
 
         return recognitions;
     }

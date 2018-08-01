@@ -2,13 +2,13 @@ package com.amitshekhar.tflite;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.renderscript.RenderScript;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -30,23 +30,27 @@ public class MainActivity extends AppCompatActivity {
         return instance;
     }
 
-
-
-
-
+    public TextureView mTextureView;
+    RenderScriptHelper mHelper = new RenderScriptHelper();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = this;
 
+        mHelper.Init();
+
         setContentView(R.layout.activity_main);
         initTensorFlowAndLoadModel();
+
+        mTextureView = findViewById( R.id.MyTexture );
 
         mRs = RenderScript.create(this);
 
 
         Intent intent = new Intent(this, LiveCameraActivity.class);
         startActivity(intent);
+
+
 
     }
 
@@ -107,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RenderScript mRs ;
 
-    public void ProcessImage(Bitmap bmp) {
+    public void ProcessImage(Bitmap bmp, TextureView textureView) {
 
         if(bmp==null)
             return;
@@ -126,12 +130,16 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        Bitmap rgbBitmap = RenderScriptHelper.resizeBitmap2(mRs,bmp,224);
+        Bitmap rgbBitmap = mHelper.resizeBitmap2(mRs,bmp,224);
 
-        Log.d("Main Activity", "w: " + rgbBitmap.getWidth()+ " h: " + rgbBitmap.getHeight());
+        //Log.d("Main Activity", "w: " + rgbBitmap.getWidth()+ " h: " + rgbBitmap.getHeight());
 
-        classifier.recognizeImage((rgbBitmap));
+        List<Box> boxes =  classifier.recognizeImage(rgbBitmap);
 
+        CustomView.getInstance().DrawingBox = boxes;
+        CustomView.getInstance().invalidate();
+
+/*
         if(rgbBitmap==null)return;
 
         try {
@@ -139,15 +147,22 @@ public class MainActivity extends AppCompatActivity {
 
             Canvas canvas = r.lockCanvas();
             if(canvas != null) {
-                canvas.drawBitmap(rgbBitmap, 0, 0, null);
-                r.unlockCanvasAndPost(canvas);
+                Paint myPaint = new Paint();
+                myPaint.setStyle(Paint.Style.STROKE);
+                myPaint.setColor(Color.rgb(0, 0, 0));
+                myPaint.setStrokeWidth(10);
+                canvas.drawRect(100, 100, 200, 200, myPaint);
+                Log.d(TAG,"Canvas good");
+            }else
+            {
+                Log.d(TAG,"Canvas null");
             }
 
         }catch (Exception e)
         {
 
         }
-
+*/
         // Log.d("Main Activity", "w: " + rgbBitmap.getWidth() + " h: " + rgbBitmap.getHeight());
 
     }

@@ -21,7 +21,6 @@
         </activity>
         
         <activity android:name=".LiveCameraActivity"/>
-        <service android:name="VideoProcessingService"></service>
     </application>
 
 </manifest>

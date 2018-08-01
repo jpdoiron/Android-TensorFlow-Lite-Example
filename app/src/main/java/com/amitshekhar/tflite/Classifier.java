@@ -69,7 +69,7 @@ public interface Classifier {
     }
 
 
-    List<Recognition> recognizeImage(Bitmap bitmap);
+    List<Box> recognizeImage(Bitmap bitmap);
 
     void close();
 }

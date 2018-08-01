@@ -97,7 +97,11 @@ final class RenderScriptHelper {
     }
 
 
-    public static Bitmap resizeBitmap2(RenderScript rs, Bitmap src, int dstWidth) {
+    private Allocation tmpIn = null;
+    private Allocation tmpFiltered = null;
+    private ScriptIntrinsicBlur blurInstrinsic = null;
+
+    public Bitmap resizeBitmap2(RenderScript rs, Bitmap src, int dstWidth) {
         Bitmap.Config  bitmapConfig = src.getConfig();
         int srcWidth = src.getWidth();
         int srcHeight = src.getHeight();
@@ -114,28 +118,39 @@ final class RenderScriptHelper {
         radius = Math.min(25, Math.max(0.0001f, radius));
 
         /* Gaussian filter */
-        Allocation tmpIn = Allocation.createFromBitmap(rs, src);
-        Allocation tmpFiltered = Allocation.createTyped(rs, tmpIn.getType());
-        ScriptIntrinsicBlur blurInstrinsic = ScriptIntrinsicBlur.create(rs, tmpIn.getElement());
 
-        blurInstrinsic.setRadius(radius);
-        blurInstrinsic.setInput(tmpIn);
-        blurInstrinsic.forEach(tmpFiltered);
+        if(tmpIn==null)
+            tmpIn = Allocation.createFromBitmap(rs, src);
+        else
+            tmpIn.copyFrom(src);
 
-        tmpIn.destroy();
-        blurInstrinsic.destroy();
+        if(tmpFiltered==null)
+            tmpFiltered = Allocation.createTyped(rs, tmpIn.getType());
+
+        if(blurInstrinsic==null)
+            blurInstrinsic = ScriptIntrinsicBlur.create(rs, tmpIn.getElement());
+
+
+
+        //blurInstrinsic.setRadius(radius);
+        //blurInstrinsic.setInput(tmpIn);
+        //blurInstrinsic.forEach(tmpFiltered);
+
+        //tmpIn.destroy();
+        //blurInstrinsic.destroy();
 
         /* Resize */
         Bitmap dst = Bitmap.createBitmap(dstWidth, dstHeight, bitmapConfig);
-        Type t = Type.createXY(rs, tmpFiltered.getElement(), dstWidth, dstHeight);
+        Type t = Type.createXY(rs, tmpIn.getElement(), dstWidth, dstHeight);
+
         Allocation tmpOut = Allocation.createTyped(rs, t);
         ScriptIntrinsicResize resizeIntrinsic = ScriptIntrinsicResize.create(rs);
 
-        resizeIntrinsic.setInput(tmpFiltered);
+        resizeIntrinsic.setInput(tmpIn);
         resizeIntrinsic.forEach_bicubic(tmpOut);
         tmpOut.copyTo(dst);
 
-        tmpFiltered.destroy();
+       // tmpFiltered.destroy();
         tmpOut.destroy();
         resizeIntrinsic.destroy();
 
@@ -182,5 +197,8 @@ final class RenderScriptHelper {
 
     }
 
+
+    public void Init() {
+    }
 
 }

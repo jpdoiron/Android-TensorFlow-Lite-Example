@@ -17,9 +17,7 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
 
 /**
  * Created by amitshekhar on 17/03/18.
@@ -68,7 +66,7 @@ public class YoloV3Classifier implements Classifier {
     }
 
     @Override
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
+    public List<Box> recognizeImage(Bitmap bitmap) {
         convertBitmapToByteBuffer(bitmap);
 
         //float[] myFloatArray = new float[BATCH_SIZE * inputSize * inputSize*3];
@@ -144,32 +142,11 @@ public class YoloV3Classifier implements Classifier {
 
 
     @SuppressLint("DefaultLocale")
-    private List<Recognition> getSortedResult(float[][][][] labelProbArray) {
+    private List<Box> getSortedResult(float[][][][]labelProbArray) {
 
-        PriorityQueue<Recognition> pq =
-                new PriorityQueue<>(
-                        MAX_RESULTS,
-                        new Comparator<Recognition>() {
-                            @Override
-                            public int compare(Recognition lhs, Recognition rhs) {
-                                return Float.compare(rhs.getConfidence(), lhs.getConfidence());
-                            }
-                        });
-/*
-        for (int i = 0; i < labelList.size(); ++i) {
-            float confidence = (labelProbArray[0][i] & 0xff) / 255.0f;
-            if (confidence > THRESHOLD) {
-                pq.add(new Recognition("" + i,
-                        labelList.size() > i ? labelList.get(i) : "unknown",
-                        confidence));
-            }
-        }*/
 
-        final ArrayList<Recognition> recognitions = new ArrayList<>();
-        int recognitionsSize = Math.min(pq.size(), MAX_RESULTS);
-        for (int i = 0; i < recognitionsSize; ++i) {
-            recognitions.add(pq.poll());
-        }
+        final List<Box> recognitions = new ArrayList<>();
+
 
         return recognitions;
     }

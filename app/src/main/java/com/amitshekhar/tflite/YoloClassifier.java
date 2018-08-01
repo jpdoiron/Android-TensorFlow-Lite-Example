@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
@@ -49,16 +48,29 @@ public class YoloClassifier implements Classifier {
     private static final String LABEL_PATH = "labels.txt";
     private static final int INPUT_SIZE = 224;
 
-    protected float imgDataFloat[][][][] = new float[BATCH_SIZE][INPUT_SIZE][INPUT_SIZE][3];
+    protected float imgDataFloat[][][][];
     float[][] result = new float[1][1573];
 
+    float[][] data = new float[1][INPUT_SIZE * INPUT_SIZE * 3];
+
+
+
     ByteBuffer byteBuffer = null;
+    ByteBuffer ResultBuffer = null;
+
 
     private YoloClassifier() {
 
 
         byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * INPUT_SIZE * INPUT_SIZE * PIXEL_SIZE);
         byteBuffer.order(ByteOrder.nativeOrder());
+
+
+        ResultBuffer = ByteBuffer.allocateDirect(1573*4);
+        ResultBuffer.order(ByteOrder.nativeOrder());
+
+
+        imgDataFloat = new float[BATCH_SIZE][INPUT_SIZE][INPUT_SIZE][3];
 
     }
 
@@ -94,21 +106,23 @@ public class YoloClassifier implements Classifier {
 
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-        Log.d("inference","time : " + timeElapsed);
+        Log.d("inference Float","time : " + timeElapsed);
 
         getSortedResult(result[0]);
     }
 
     @Override
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
+    public List<Box> recognizeImage(Bitmap bitmap) {
 
+        long start = System.currentTimeMillis();
+        /*
         Bitmap bm =null;
         try {
             bm = BitmapFactory.decodeStream(assetManager.open("screen_1.png"));
         } catch(IOException e) {
             // handle exception
         }
-
+        */
        //float[] readback=new float[224*244*3];
         ByteBuffer bb = convertBitmapToByteBuffer(bitmap);
             //FloatBuffer a =  bb.asFloatBuffer();
@@ -120,16 +134,21 @@ public class YoloClassifier implements Classifier {
             bb.rewind();
     */
 
-        //float[] myFloatArray = new float[BATCH_SIZE * inputSize * inputSize*3];
-        //ByteBuffer.wrap(byteBuffer.array()).asFloatBuffer().get(myFloatArray);
+       //FloatBuffer fb = ByteBuffer.wrap(bb.array()).asFloatBuffer();
 
-        long start = System.currentTimeMillis();
+        //fb.get(data[0]);
 
+
+
+        //ResultBuffer.rewind();
+        bb.rewind();
         interpreter.run(bb, result);
+
+       // result = ResultBuffer.asFloatBuffer().array();
 
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
-        Log.d("inference","time : " + timeElapsed);
+       //Log.d("inference bitmap","time : " + timeElapsed);
 
         return getSortedResult(result[0]);
     }
@@ -160,11 +179,13 @@ public class YoloClassifier implements Classifier {
         return labelList;
     }
 
+    private int[] intValues =null;
     private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
 
 
         byteBuffer.rewind();
-        int[] intValues = new int[inputSize * inputSize];
+        if(intValues==null)
+            intValues = new int[inputSize * inputSize];
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
         int pixel = 0;
@@ -195,7 +216,7 @@ public class YoloClassifier implements Classifier {
 
 
     @SuppressLint("DefaultLocale")
-    private List<Recognition> getSortedResult(float[] ResultArray) {
+    private List<Box> getSortedResult(float[] ResultArray) {
 
 /*
             for (int h =0;h<10;h++)
@@ -205,8 +226,9 @@ public class YoloClassifier implements Classifier {
             }
 */
 
-        final ArrayList<Boxes> myBoxes = new ArrayList<>();
-
+        final List<Box> myBoxes = new ArrayList<>();
+        //if(myBoxes != null)
+        //return myBoxes;
 
 
         for (int h =0;h<=10;h++)
@@ -223,7 +245,7 @@ public class YoloClassifier implements Classifier {
             //Log.d("inference",h + "," + w + " Prob : " + p1  +"-"+ p1);
 
             if (p1 > 0.3) {
-                Boxes b = new Boxes();
+                Box b = new Box();
                 b.Probability = p1;
 
 
@@ -245,7 +267,7 @@ public class YoloClassifier implements Classifier {
 
             }
             if (p2 > 0.3) {
-                Boxes b = new Boxes();
+                Box b = new Box();
                 b.Probability = p2;
 
 
@@ -270,7 +292,7 @@ public class YoloClassifier implements Classifier {
 
         for(int x=0;x<myBoxes.size();x++)
         {
-            Log.d("inference","Box : " + myBoxes.toString());
+          //  Log.d("inference","Box : " + myBoxes.toString());
 
         }
 
@@ -290,9 +312,9 @@ public class YoloClassifier implements Classifier {
             Log.d("inference","r1: " + r3);
 */
 
-        final ArrayList<Recognition> recognitions = new ArrayList<>();
+        //final ArrayList<Recognition> recognitions = new ArrayList<>();
 
-        return recognitions;
+        return myBoxes;
 
     }
 
@@ -301,20 +323,7 @@ public class YoloClassifier implements Classifier {
         return (float)(1 / (1 + Math.exp(-x)));
     }
 
-    class Boxes {
-        public String toString(){
-            String s = "p:" + Probability + " : " + x1 + "," + y1 + "," + x2 + "," + y2;
-            return s;
-        }
 
-        float Probability  = 0.0f;
-        int x1 = 0;
-        int y1 = 0;
-        int x2 = 0;
-        int y2 = 0;
-
-
-    }
 
 
 }

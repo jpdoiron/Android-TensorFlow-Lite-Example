@@ -12,9 +12,22 @@
 
 
     <TextureView
-        android:id="@+id/textureview"
-        android:layout_width="match_parent"
-        android:layout_height="460dp" />
+        android:id="@+id/MyTexture"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+
+        />
+
+    <com.amitshekhar.tflite.CustomView
+        android:id="@+id/customView"
+        android:layout_height="fill_parent"
+        android:layout_width="fill_parent"
+        android:background="@android:color/transparent"
+
+        />
+
+
+
 
     <Button
         android:id="@+id/getpicture"
@@ -22,6 +35,5 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="Get Picture" />
-
 
 </FrameLayout>
