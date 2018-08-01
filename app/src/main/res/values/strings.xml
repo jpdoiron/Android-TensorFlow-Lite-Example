@@ -4,4 +4,9 @@
     <string name="detect_object">Detect Object</string>
     <string name="title_activity_live_camera">LiveCameraActivity</string>
     <string name="title_activity_camera">CameraActivity</string>
+    <string name="VideoProcessingService">VideoProcessingService</string>
+    <string name="did_not_complete" />
+    <string name="usec_per_iteration" />
+    <string name="running_test" />
+    <string name="cancel" />
 </resources>

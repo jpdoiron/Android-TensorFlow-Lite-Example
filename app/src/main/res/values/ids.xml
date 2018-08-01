@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="action_settings" type="id"></item>
+    <item name="work_progress" type="id" />
+    <item name="gfxResult_text" type="id" />
 </resources>

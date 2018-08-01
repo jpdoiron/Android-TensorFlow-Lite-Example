@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+    sourceSets {
+        main {
+            renderscript.srcDirs = ['src']
+            java.srcDirs = ['src/main/java', 'src/main/java/gles']
+        }
+    }
     signingConfigs {
         config {
             keyAlias 'Key0'
@@ -17,6 +23,8 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        renderscriptTargetApi 19
+        renderscriptSupportModeEnabled false
     }
     buildTypes {
         release {

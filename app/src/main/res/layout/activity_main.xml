@@ -11,17 +11,17 @@
     tools:context="com.amitshekhar.tflite.MainActivity">
 
 
-
     <TextureView
         android:id="@+id/textureview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="460dp" />
+
     <Button
         android:id="@+id/getpicture"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="Get Picture"/>
+        android:text="Get Picture" />
 
 
 </FrameLayout>
