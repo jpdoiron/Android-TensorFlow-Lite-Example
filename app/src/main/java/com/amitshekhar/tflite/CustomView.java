@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -12,6 +13,8 @@ import java.util.List;
 
 class CustomView extends View {
     Paint paint = new Paint();
+    Paint textPaint = new Paint();
+
 
     private static CustomView instance;
     public static CustomView getInstance() {
@@ -22,6 +25,11 @@ class CustomView extends View {
     private void init() {
         paint.setColor(Color.BLACK);
         paint.setStrokeWidth(5);
+
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setColor(Color.RED);
+        textPaint.setTextSize(60);
+
         instance = this;
 
     }
@@ -58,10 +66,13 @@ class CustomView extends View {
                 canvas.drawLine(b.x1, b.y2, b.x2, b.y2, paint);
                 canvas.drawLine(b.x2, b.y1, b.x2, b.y2, paint);
 
+                String Prob = "P = " + (int)(box.Probability*100.0);
+                canvas.drawText(Prob,b.x1,b.y1,textPaint);
+
+
             }
 
         }
-        canvas.drawLine(0, 0, 20, 20, paint);
-        canvas.drawLine(20, 0, 0, 20, paint);
+
     }
 }
